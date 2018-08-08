@@ -3,7 +3,7 @@
 """
 Created on Sun Aug  5 17:48:18 2018
 
-@author: haiyan
+@author: Osman & Haiyan
 """
 """
 2 2 "G_surface"
