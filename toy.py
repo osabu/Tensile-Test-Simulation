@@ -3,7 +3,7 @@
 """
 Created on Sun Aug  5 17:48:18 2018
 
-@author: Osman & Haiyan
+@author: Osman & haiyan
 """
 """
 2 2 "G_surface"
@@ -35,13 +35,13 @@ left = CompiledSubDomain('near(x[1],0) && on_boundary')
 right = CompiledSubDomain('near(x[1],180.0) && on_boundary')
 
 facets.set_all(0)
-left.mark(facets, 1)
-period = 120.
+right.mark(facets, 1)
+period = 60.
 displacement = Expression(('0.0','0.001*sin(2.*pi*f*time)','0.0'), f=1./period, time=0, degree=2)
 
-#bc1 = [DirichletBC(V, (0.,0.,0.), left)]
-#bc2 = [DirichletBC(V, displacement, right)]
-bc = [DirichletBC(V , (0.,0.,0.) , left )]
+bc1 = DirichletBC(V, (0.,0.,0.), left)
+bc2 = DirichletBC(V, displacement, right)
+bc = [bc1,bc2]
 f_gr = Constant((0.,0.,0.))
 
 du = TrialFunction(V)
@@ -55,18 +55,23 @@ S0 = Function(T)
 print ('initializing, time ')
 t = 0.0
 tend = period
-dt = 2
+dt = 1
+#stress_history = TimeSeries(mesh.mpi_comm(), pwd+'hist/stressHist')
+#strain_history = TimeSeries(mesh.mpi_comm(), pwd+'hist/strainHist')
+#stress_history.parameters["clear_on_write"] = False
+#strain_history.parameters["clear_on_write"] = False
+
 
 init = Expression(('0','0','0'), degree=2)
 u.interpolate(init)
 u0.assign(u)
 u00.assign(u0)
-
 print ('initializing, space')
-rho0 = 9000.0E-15 #g/mikrometer^3
-lambada = 90.0 #mN/mikrometer^2 (GPa)
-E1, E2 = 200.0, 200.0 # mN/mikrometer^2 (GPa)
-mu = 2.0E5 #mN ms / mikrometer^2 (N s/mm^2)
+rho0 = 1.94E-9 #tonne/milimeter^3
+E1, E2 = 385000.0, 6300.0 # mN/mikrometer^2 (GPa)
+G = 7.7 #GPa
+lambada = 2*G*0.2/(1-2*0.2) #mN/mikrometer^2 (GPa)
+mu = 1.0 #mN ms / mikrometer^2 (N s/mm^2)
 
 i,j,k,r = indices(4)
 delta = Identity(3)
@@ -90,21 +95,26 @@ nz = as_tensor([0.0,0.0,1.0])
 
 Gain = derivative(Form, u, du)
 
-fie_u = File(pwd+'displacement.pvd')
+file_u = File(pwd+'displacement.pvd')
 
 #file_list = ...
 time_values=[0.0]
 #forcesZ_values=[0.0]
 stresses = []
 strains = []
+temp_array = []
+time = []
+#stress_history.clear()
+#strain_history.clear()
+
 
 import matplotlib as mpl
 mpl.use('Agg')
 import matplotlib.pyplot as pylab
-pylab.rc('text', usetex=True )
-pylab.rc('font', family='serif', serif='cm', size=30 )
-pylab.rc('legend', fontsize=30 )
-pylab.rc(('xtick.major','ytick.major'), pad=15)
+#pylab.rc('text', usetex=True )
+#pylab.rc('font', family='serif', serif='cm', size=30 )
+#pylab.rc('legend', fontsize=30 )
+#pylab.rc(('xtick.major','ytick.major'), pad=15)
 
 #pylab.ion()
 fig = pylab.figure(1, figsize= (12,8) )
@@ -123,21 +133,29 @@ while t<tend:
     tic()
     
     solve(Form==0, u, bc, J=Gain, solver_parameters={"newton_solver":
-        {"linear_solver":"cg", "preconditioner": "hyper_amg", "relative_tolerance":
+        {"linear_solver":"cg", "preconditioner": "hypre_amg", "relative_tolerance":
             1E-2, "absolute_tolerance": 1E-5, "maximum_iterations": 30} },
-        form_compiler_parameters={"cpp_optimize": True, "representation": "quadrature", "quadrature_degree": 2} )
-    
+        form_compiler_parameters={"cpp_optimize": True, "representation": "uflacs", "quadrature_degree": 2} )
+    tip_disp = displacement(25.0, 180.0, 5.0)[1]
+    print (tip_disp)
     file_u << (u,t)
     time_values.append(t)
  #   fZ = project(forceZ, V)
   #  fZvalue = abs(fZ((0,0,0))[2])
    # forceZ_values.append(fZvalue)
     
-    stresses.append(eps)
-    strains.append(S)
+     
+    
+    
     S0.assign(project(S,T))
+    eqvS = as_tensor((3.0/2.0*devS0[i,j]*devS0[i,j])**0.5 , () )
+    Es = project(eqvS,FunctionSpace(mesh, 'P', 1))
+    stresses.append(Es(20.0, 180.0, 5.0))
+    strains.append(tip_disp/180.0)
+    
     u00.assign(u0)
     u0.assign(u)
-  
-    pylab.plot(strains, stresses, 'ro-')
-    pylab.savefig(pwd+'Try22.pdf')
+    print (strains)
+    print (stresses)
+    pylab.plot(strains, stresses , 'r-')
+    pylab.savefig('Try22.pdf')
