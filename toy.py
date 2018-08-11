@@ -37,7 +37,7 @@ right = CompiledSubDomain('near(x[1],180.0) && on_boundary')
 facets.set_all(0)
 right.mark(facets, 1)
 period = 60.
-displacement = Expression(('0.0','0.001*sin(2.*pi*f*2*time)','0.0'), f=1./period, time=0, degree=2)
+displacement = Expression(('0.0','0.001*sin(2.*pi*f*time)','0.0'), f=1./period, time=0, degree=2)
 
 bc1 = DirichletBC(V, (0.,0.,0.), left)
 bc2 = DirichletBC(V, displacement, right)
@@ -55,7 +55,7 @@ S0 = Function(T)
 print ('initializing, time ')
 t = 0.0
 tend = period
-dt = 2.
+dt = 1.
 #stress_history = TimeSeries(mesh.mpi_comm(), pwd+'hist/stressHist')
 #strain_history = TimeSeries(mesh.mpi_comm(), pwd+'hist/strainHist')
 #stress_history.parameters["clear_on_write"] = False
