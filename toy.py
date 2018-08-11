@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Sun Aug  5 17:48:18 2018
+Created on Sun Aug  12 01:27:18 2018
 
 @author: Osman & haiyan
 """
@@ -14,6 +14,7 @@ Created on Sun Aug  5 17:48:18 2018
 
 
 from fenics import *
+import matplotlib.pyplot as mt
 set_log_level(ERROR)
 pwd='/home/osmanabu/Downloads/Assignment_2/'
 mesh = Mesh(pwd+'Mesh_1.xml')
@@ -37,7 +38,7 @@ right = CompiledSubDomain('near(x[1],180.0) && on_boundary')
 facets.set_all(0)
 right.mark(facets, 1)
 period = 60.
-displacement = Expression(('0.0','0.001*sin(2.*pi*f*time)','0.0'), f=1./period, time=0, degree=2)
+displacement = Expression(('0.0','0.001*sin(2.*3.*pi*f*time)','0.0'), f=1./period, time=0, degree=2)
 
 bc1 = DirichletBC(V, (0.,0.,0.), left)
 bc2 = DirichletBC(V, displacement, right)
@@ -55,7 +56,7 @@ S0 = Function(T)
 print ('initializing, time ')
 t = 0.0
 tend = period
-dt = 1.
+dt = 2.
 #stress_history = TimeSeries(mesh.mpi_comm(), pwd+'hist/stressHist')
 #strain_history = TimeSeries(mesh.mpi_comm(), pwd+'hist/strainHist')
 #stress_history.parameters["clear_on_write"] = False
@@ -74,7 +75,7 @@ print ('initializing, space')
 #mu = 2.0 #mN ms / mikrometer^2 (N s/mm^2)
 rho0 = 9000.0E-9 #g/mikrometer^3
 lambada = 90.0E6 #mN/mikrometer^2 (GPa)
-E1, E2 = 20.0, 20.0 # mN/mikrometer^2 (GPa)
+E1, E2 = 200.0, 200.0 # mN/mikrometer^2 (GPa)
 mu = 2.0E11 #mN ms / mikrometer^2 (N s/mm^2)
 
 
@@ -126,12 +127,13 @@ fig = pylab.figure(1, figsize= (12,8) )
 fig.clf()
 pylab.subplots_adjust(bottom=0.18)
 pylab.subplots_adjust(left=0.16)
-pylab.xlabel(r'Stain')
+pylab.xlabel(r'Strain')
 pylab.ylabel(r'Stress')
 pylab.grid(True)
 
 tic()
 while t<tend:
+    array = 0
     displacement.time = t
     t += dt
     print ('time: ', t, 'indent: ', 'in ', toc(), 'seconds')
@@ -161,6 +163,11 @@ while t<tend:
     u00.assign(u0)
     u0.assign(u)
     print (strains)
-    print (stresses)
-    pylab.plot(strains, stresses , 'r-')
-    pylab.savefig('Try22.pdf')
+    print (stresses)	
+    if strains[array/2] >= 0. : 
+	mt.plot(strains, stresses , 'r-')
+        mt.savefig('Try22.pdf')
+    else :
+    	mt.plot(strains, -stresses , 'r-')
+        mt.savefig('Try22.pdf')
+    array = array + 2	
