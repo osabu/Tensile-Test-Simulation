@@ -37,7 +37,7 @@ right = CompiledSubDomain('near(x[1],180.0) && on_boundary')
 facets.set_all(0)
 right.mark(facets, 1)
 period = 60.
-displacement = Expression(('0.0','0.001*sin(2.*pi*f*time)','0.0'), f=1./period, time=0, degree=2)
+displacement = Expression(('0.0','0.001*sin(2.*pi*f*2*time)','0.0'), f=1./period, time=0, degree=2)
 
 bc1 = DirichletBC(V, (0.,0.,0.), left)
 bc2 = DirichletBC(V, displacement, right)
@@ -55,7 +55,7 @@ S0 = Function(T)
 print ('initializing, time ')
 t = 0.0
 tend = period
-dt = 1
+dt = 2.
 #stress_history = TimeSeries(mesh.mpi_comm(), pwd+'hist/stressHist')
 #strain_history = TimeSeries(mesh.mpi_comm(), pwd+'hist/strainHist')
 #stress_history.parameters["clear_on_write"] = False
@@ -67,11 +67,16 @@ u.interpolate(init)
 u0.assign(u)
 u00.assign(u0)
 print ('initializing, space')
-rho0 = 1.94E-9 #tonne/milimeter^3
-E1, E2 = 385000.0, 6300.0 # mN/mikrometer^2 (GPa)
-G = 7.7 #GPa
-lambada = 2*G*0.2/(1-2*0.2) #mN/mikrometer^2 (GPa)
-mu = 1.0 #mN ms / mikrometer^2 (N s/mm^2)
+#rho0 = 1.94E-9 #tonne/milimeter^3
+#E1, E2 = 385000.0, 6300.0 # mN/mikrometer^2 (GPa)
+#G = 7.7 #GPa
+#lambada = 2*G*0.2/(1-2*0.2) #mN/mikrometer^2 (GPa)
+#mu = 2.0 #mN ms / mikrometer^2 (N s/mm^2)
+rho0 = 9000.0E-9 #g/mikrometer^3
+lambada = 90.0E6 #mN/mikrometer^2 (GPa)
+E1, E2 = 20.0, 20.0 # mN/mikrometer^2 (GPa)
+mu = 2.0E11 #mN ms / mikrometer^2 (N s/mm^2)
+
 
 i,j,k,r = indices(4)
 delta = Identity(3)
