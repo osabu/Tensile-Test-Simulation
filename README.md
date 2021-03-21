@@ -1,6 +1,6 @@
 # Tensile-Test-Simulation
 
-In this assignment we are using couple of programms in order to make a tensile test simulation, which is used to get the material parameters, for a viscoelastic material,
+In this assignment we are using couple of programmes in order to make a tensile test simulation, which is used to get material parameters, for a viscoelastic material,
 
 Shape withoutmesh (using salome -open source software-)
 ![shot_2 1](https://user-images.githubusercontent.com/23018970/43715386-a6fc9644-9980-11e8-8d62-50e2e253e4d9.png)
